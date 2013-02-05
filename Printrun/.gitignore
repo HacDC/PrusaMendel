@@ -1,0 +1,4 @@
+*.pyc
+.pronsolerc
+*.swp
+*.bak
