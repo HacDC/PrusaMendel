@@ -2,3 +2,6 @@
 .pronsolerc
 *.swp
 *.bak
+uploads
+.DS_Store
+.vagrant

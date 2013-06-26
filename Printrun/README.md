@@ -3,7 +3,6 @@ Printrun consists of printcore, pronsole and pronterface, and a small collection
   * printcore.py is a library that makes writing reprap hosts easy
   * pronsole.py is an interactive command-line host software with tabcompletion goodness
   * pronterface.py is a graphical host software with the same functionality as pronsole
-  * webinterface.py is a browser-usable remote control function for Pronterface
 
 # GETTING PRINTRUN
 
@@ -15,22 +14,40 @@ If you want the newest, shiniest features, you can run Printrun from source usin
 
 A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
 
+*Note:* Prontserve is not currently included in the windows binary.
+
 ## Mac OS X
 
 A precompiled version is available at http://koti.kapsi.fi/~kliment/printrun/
+
+*Note:* Prontserve is not currently included in the OSX binary.
 
 ## Linux
 ### Ubuntu/Debian
 
 You can run Printrun directly from source, as there are no packages available yet. Fetch and install the dependencies using
 
-`sudo apt-get install python-serial python-wxgtk2.8 python-pyglet`
+1. `sudo apt-get install python-serial python-wxgtk2.8 python-pyglet python-tornado python-setuptools python-libxml2 python-gobject avahi-daemon libavahi-compat-libdnssd1`
+2. `sudo easy_install pybonjour tornado`
+3. `sudo easy_install https://github.com/D1plo1d/py-mdns/archive/master.zip`
 
-### Fedora 15 and newer
+### Fedora 17 and newer
 
-You can run Printrun directly from source, as there are no packages available yet. Fetch and install the dependencies using
+You can install Printrun from official packages. Install the whole package using
 
-`sudo yum install pyserial wxpython pyglet`
+`sudo yum install printrun`
+
+Or get only apps you need by
+
+`sudo yum install pronsole` or `pronterface` or `plater`
+
+Adding `--enablerepo updates-testing` option to `yum` might give you newer packages (but also not very tested).
+
+You can also run Printrun directly from source, if the packages are too old for you anyway, or you have Fedora 15 or 16. Fetch and install the dependencies using
+
+1. `sudo yum install pyserial wxpython pyglet python-tornado`
+2. `sudo apt-get install avahi-daemon python-avahi tornado`
+2. `sudo easy_install https://github.com/D1plo1d/py-mdns/archive/master.zip`
 
 ### Archlinux
 
@@ -39,6 +56,8 @@ Packages are available in AUR. Just run
 `yaourt printrun`
 
 and enjoy the `pronterface`, `pronsole`, ... commands directly.
+
+*Note:* Prontserve is not currently included in the arch package.
 
 # USING PRONTERFACE
 
@@ -51,23 +70,12 @@ The command box recognizes all pronsole commands, but has no tabcompletion.
 If you want to load stl files, you need to install a slicing program such as Slic3r and add its path to the settings.
 See the Slic3r readme for more details on integration.
 
-# Using the browser interface
 
-To run the web interface, install Cherrypy and run Pronterface as described above.
-The www server will start on the port/address you have chosen.
+# USING PRONSERVE
 
-## Webinterface Dependencies 
+Prontserve runs a server for remotely monitoring and controlling your 3D printer over your network.
 
-Cherrypy is required for the web interface.  Download and install it by opening a 
-command prompt in its directory and running python setup.py install.
-
-## Webinterface Configuration
-  * The Web interface port / ip is configurable in http.config
-  * The Default User / Password can be set in auth.config
-  
-## Webinterface Styling
-  * css/style.css can be modified to change the style of the Web Interface.
- 
+To start the server you can run `./prontserve.py` in the directory you git cloned printrun too. Once the server starts you can verify it's working by going to http://localhost:8888 in your web browser.
 
 
 # USING PRONSOLE
@@ -106,10 +114,13 @@ Run Printrun for source if you want to test out the latest features.
 To use pronterface, you need:
 
   * python (ideally 2.6.x or 2.7.x),
-  * pyserial (or python-serial on ubuntu/debian),
+  * pyserial (or python-serial on ubuntu/debian)
   * pyglet
+  * numpy (for 3D view)
   * pyreadline (not needed on Linux) and
-  * wxPython
+  * argparse (installed by default with python >= 2.7)
+  * wxPython (some features such as Tabbed mode work better with wx 2.9)
+  * pycairo (to use Projector feature)
 
 Please see specific instructions for Windows and Mac OS X below. Under Linux, you should use your package manager directly (see the "GETTING PRINTRUN" section)
 
@@ -120,7 +131,7 @@ Download the following, and install in this order:
   1. http://python.org/ftp/python/2.7.2/python-2.7.2.msi
   2. http://pypi.python.org/packages/any/p/pyserial/pyserial-2.5.win32.exe
   3. http://downloads.sourceforge.net/wxpython/wxPython2.8-win32-unicode-2.8.12.0-py27.exe
-  4. http://launchpad.net/pyreadline/1.7/1.7/+download/pyreadline-1.7.win32.exe
+  4. https://pypi.python.org/packages/any/p/pyreadline/pyreadline-1.7.1.win32.exe
   5. http://pyglet.googlecode.com/files/pyglet-1.1.4.zip
 
 For the last one, you will need to unpack it, open a command terminal, 
