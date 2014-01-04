@@ -21,13 +21,14 @@ import time
 import zipfile
 import tempfile
 import shutil
-from printrun.cairosvg.surface import PNGSurface
+from cairosvg.surface import PNGSurface
 import cStringIO
 import imghdr
 import copy
 import re
 from collections import OrderedDict
 import itertools
+import math 
 
 class DisplayFrame(wx.Frame):
     def __init__(self, parent, title, res=(1024, 768), printer=None, scale=1.0, offset=(0,0)):
@@ -89,28 +90,30 @@ class DisplayFrame(wx.Frame):
 
             if self.slicer == 'Slic3r' or self.slicer == 'Skeinforge':
                 
-                if int(self.scale) != 1:
+                if self.scale != 1.0:
                     layercopy = copy.deepcopy(image)
                     height = float(layercopy.get('height').replace('m',''))
                     width = float(layercopy.get('width').replace('m',''))
                     
                     layercopy.set('height', str(height*self.scale) + 'mm')
                     layercopy.set('width', str(width*self.scale) + 'mm')
-                    layercopy.set('viewBox', '0 0 ' + str(height*self.scale) + ' ' + str(width*self.scale))
-                    
+                    layercopy.set('viewBox', '0 0 ' + str(width*self.scale) + ' ' + str(height*self.scale))
+
                     g = layercopy.find("{http://www.w3.org/2000/svg}g")
                     g.set('transform', 'scale('+str(self.scale)+')')
                     stream = cStringIO.StringIO(PNGSurface.convert(dpi=self.dpi, bytestring=xml.etree.ElementTree.tostring(layercopy)))
-                else:    
+                else:
                     stream = cStringIO.StringIO(PNGSurface.convert(dpi=self.dpi, bytestring=xml.etree.ElementTree.tostring(image)))
-                    
-                image = wx.ImageFromStream(stream)
+
+                pngImage = wx.ImageFromStream(stream)
                 
+                #print "w:", pngImage.Width, ", dpi:",self.dpi, ", w (mm): ",(pngImage.Width / self.dpi) * 25.4
+
                 if self.layer_red:
-                    image = image.AdjustChannels(1,0,0,1)
+                    pngImage = pngImage.AdjustChannels(1,0,0,1)
                 
-                dc.DrawBitmap(wx.BitmapFromImage(image), self.offset[0], self.offset[1], True)
-                
+                dc.DrawBitmap(wx.BitmapFromImage(pngImage), self.offset[0], self.offset[1], True)
+
             elif self.slicer == 'bitmap':
                 if isinstance(image, str):
                     image = wx.Image(image)
@@ -325,13 +328,15 @@ class SettingsFrame(wx.Frame):
         # Right Column
         
         fieldsizer.Add(wx.StaticText(self.panel, -1, "X (px):"), pos=(0, 2), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.X = wx.SpinCtrl(self.panel, -1, str(int(self._get_setting("project_x", 1024))), max=999999, size=(80,-1))
+        projectX = int(math.floor(float(self._get_setting("project_x", 1920))))
+        self.X = wx.SpinCtrl(self.panel, -1, str(projectX), max=999999, size=(80,-1))
         self.X.Bind(wx.EVT_SPINCTRL, self.update_resolution)
         self.X.SetHelpText("The projector resolution in the X axis.")
         fieldsizer.Add(self.X, pos=(0, 3))
 
         fieldsizer.Add(wx.StaticText(self.panel, -1, "Y (px):"), pos=(1, 2), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.Y = wx.SpinCtrl(self.panel, -1, str(int(self._get_setting("project_y", 768))), max=999999, size=(80,-1))
+        projectY = int(math.floor(float(self._get_setting("project_y", 1200))))
+        self.Y = wx.SpinCtrl(self.panel, -1, str(projectY), max=999999, size=(80,-1))
         self.Y.Bind(wx.EVT_SPINCTRL, self.update_resolution)
         self.Y.SetHelpText("The projector resolution in the Y axis.")
         fieldsizer.Add(self.Y, pos=(1, 3))
@@ -349,7 +354,7 @@ class SettingsFrame(wx.Frame):
         fieldsizer.Add(self.offset_Y, pos=(3, 3))
         
         fieldsizer.Add(wx.StaticText(self.panel, -1, "ProjectedX (mm):"), pos=(4, 2), flag=wx.ALIGN_CENTER_VERTICAL)
-        self.projected_X_mm = floatspin.FloatSpin(self.panel, -1, value=self._get_setting("project_projected_x", 415.0), increment=1, digits=1, size=(80,-1))
+        self.projected_X_mm = floatspin.FloatSpin(self.panel, -1, value=self._get_setting("project_projected_x", 505.0), increment=1, digits=1, size=(80,-1))
         self.projected_X_mm.Bind(floatspin.EVT_FLOATSPIN, self.update_projected_Xmm)
         self.projected_X_mm.SetHelpText("The actual width of the entire projected image. Use the Calibrate grid to show the full size of the projected image, and measure the width at the same level where the slice will be projected onto the resin.")
         fieldsizer.Add(self.projected_X_mm, pos=(4, 3))
@@ -450,6 +455,7 @@ class SettingsFrame(wx.Frame):
         self.SetPosition((0, 0)) 
         self.Show()
 
+
     def __del__(self):
         if hasattr(self, 'image_dir') and self.image_dir != '':
             shutil.rmtree(self.image_dir)
@@ -497,9 +503,9 @@ class SettingsFrame(wx.Frame):
                 svgSnippet = xml.etree.ElementTree.Element('{http://www.w3.org/2000/svg}svg')
                 svgSnippet.set('height', height + 'mm')
                 svgSnippet.set('width', width + 'mm')
-                
-                svgSnippet.set('viewBox', '0 0 ' + height + ' ' + width)
-                svgSnippet.set('style','background-color:black')
+
+                svgSnippet.set('viewBox', '0 0 ' + width + ' ' + height)
+                svgSnippet.set('style','background-color:black;fill:white;')
                 svgSnippet.append(i)
     
                 ol += [svgSnippet]
@@ -533,8 +539,8 @@ class SettingsFrame(wx.Frame):
                 svgSnippet = xml.etree.ElementTree.Element('{http://www.w3.org/2000/svg}svg')
                 svgSnippet.set('height', height + 'mm')
                 svgSnippet.set('width', width + 'mm')
-                
-                svgSnippet.set('viewBox', '0 0 ' + height + ' ' + width)
+
+                svgSnippet.set('viewBox', '0 0 ' + width + ' ' + height)
                 svgSnippet.set('style','background-color:black;fill:white;')
                 svgSnippet.append(g)
     
@@ -749,8 +755,8 @@ class SettingsFrame(wx.Frame):
         self.refresh_display(event)
     
     def update_resolution(self, event):
-        x = float(self.X.GetValue())
-        y = float(self.Y.GetValue())
+        x = int(self.X.GetValue())
+        y = int(self.Y.GetValue())
         self.display_frame.resize((x,y))
         self._set_setting('project_x',x)
         self._set_setting('project_y',y)
