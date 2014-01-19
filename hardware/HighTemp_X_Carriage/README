@@ -1,0 +1,7 @@
+High-Temperature Fiberboard X-Carriage, intended for manufacture by CNC Milling.
+
+In use at HacDC as of January 19, 2014.
+
+Not directly recommended for new designs. Rather, it would be advisable to export a 2D only drawing, skipping the 3D G-Code generation toolset. From there, most wide-area CNC machines, including laser cutters, should be able to manufacture the part.
+
+Derrived from Prusa Mendel Iteration 2 files, which are under a 'GPL license', indicated as GPLv3 in the SCAD files. See https://github.com/prusajr/PrusaMendel/ and http://reprap.org/wiki/Prusa_Mendel_(iteration_2) . All files in this folder retain that license, which is provided with them, unless a different license is noted in their file.

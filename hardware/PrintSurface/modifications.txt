@@ -1,0 +1,5 @@
+Original File:
+glass_heatbed_v3_WO_DIM.dxf
+
+HacDC Glass Surface:
+8.75inBY8.75in.DXF
